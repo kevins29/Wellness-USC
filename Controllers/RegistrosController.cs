@@ -35,6 +35,7 @@ namespace Wellness_USC.Controllers
         }
 
         // GET: Registroes
+        [Authorize(Roles = "administrador")]
         public async Task<IActionResult> Index()
         {
             var claseDbContext = _context.Registros.Include(r => r.Clase).Include(r => r.User);
@@ -42,6 +43,7 @@ namespace Wellness_USC.Controllers
         }
 
         // GET: Registroes/Details/5
+        [Authorize(Roles = "administrador")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -62,6 +64,7 @@ namespace Wellness_USC.Controllers
         }
 
         // GET: Registroes/Create
+        [Authorize(Roles = "administrador")]
         public IActionResult Create()
         {
             ViewData["ClaseId"] = new SelectList(_context.Clases, "ClaseId", "Name");
@@ -75,6 +78,7 @@ namespace Wellness_USC.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "administrador")]
         public async Task<IActionResult> Create([Bind("RegistroId,Id,ClaseId")] Registro registro)
         {
 
@@ -119,14 +123,13 @@ namespace Wellness_USC.Controllers
             if (id == null)
             {
                 Alert("Lo sentimos, Esta Clase No Existe", NotificationType.error);
-                return RedirectToAction("Index", "Clases");
+                return RedirectToAction("Index");
             }
 
             var clase = await _context.Clases.FirstOrDefaultAsync(c => c.ClaseId == id);
             if (clase == null)
             {
                 Alert("Lo sentimos, Esta Clase No Existe", NotificationType.error);
-                Thread.Sleep(2000);
                 return RedirectToAction("Index", "Clases");
             }
 
@@ -142,12 +145,9 @@ namespace Wellness_USC.Controllers
             var userExists = await _context.Registros.FirstOrDefaultAsync(r => (r.ClaseId == registro.ClaseId && r.Id == registro.UserId));
             if (userExists != null)
             {
-                Alert("Usted ya se ha registrado en este curso", NotificationType.error);
-                Thread.Sleep(2000);
-                return RedirectToAction("Index", "Clases");
+
+                return RedirectToAction("Denegado");
             }
-            Console.WriteLine(registro.UserId);
-            Console.WriteLine(registro.ClaseId);
 
             var row = await _context.Clases.FirstOrDefaultAsync(clase => clase.ClaseId == registro.ClaseId);
 
@@ -156,9 +156,8 @@ namespace Wellness_USC.Controllers
 
             if (rows.Count >= row.Quantity)
             {
-                Alert("Lo sentimos, el Curso ha Excedido la Cantidad De Estudiantes", NotificationType.error);
-                Thread.Sleep(2000);
-                return RedirectToAction("Index", "Clases");
+
+                return RedirectToAction("Excedido");
             }
 
             var newRegistro = new Registro { Id = registro.UserId, ClaseId = registro.ClaseId };
@@ -167,15 +166,37 @@ namespace Wellness_USC.Controllers
             {
                 _context.Add(newRegistro);
                 await _context.SaveChangesAsync();
-                Alert("Felicitaciones, Te has registrado exitosamente en esta Clase", NotificationType.success);
-                Thread.Sleep(2000);
-                return RedirectToAction("Index", "Clases");
+                return RedirectToAction("Registrado");
             }
 
             return View(registro);
         }
 
+        public IActionResult Registrado()
+        {
+
+
+            return View();
+        }
+
+        public IActionResult Denegado()
+        {
+
+
+            return View();
+        }
+
+        public IActionResult Excedido()
+        {
+
+
+            return View();
+        }
+
+
+
         // GET: Registroes/Edit/5
+        [Authorize(Roles = "administrador")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -198,6 +219,7 @@ namespace Wellness_USC.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "administrador")]
         public async Task<IActionResult> Edit(int id, [Bind("RegistroId,Id,ClaseId")] Registro registro)
         {
             if (id != registro.RegistroId)
@@ -231,6 +253,7 @@ namespace Wellness_USC.Controllers
         }
 
         // GET: Registroes/Delete/5
+        [Authorize(Roles = "administrador")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -253,6 +276,7 @@ namespace Wellness_USC.Controllers
         // POST: Registroes/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "administrador")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var registro = await _context.Registros.FindAsync(id);
